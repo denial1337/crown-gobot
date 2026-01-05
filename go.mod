@@ -1,8 +1,5 @@
-module cron-bot
+module github.com/denial1337/crown-gobot
 
 go 1.21
 
-require (
-    github.com/mattn/go-sqlite3 v1.14.22
-    github.com/robfig/cron/v3 v3.0.1
-)
+require github.com/go-telegram/bot v1.17.0
