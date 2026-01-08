@@ -69,8 +69,8 @@ func main() {
                     // Обрабатываем задачи
                     for _, task := range tasks {
                         // Отправляем сообщение (раскомментируй когда нужно)
-                        b.SendMessage(ctx, task.ChatID, task.Message)
-                        
+                        //b.SendMessage(ctx, task.ChatID, task.Message)
+                        log.Print(task.ChatID)
                         // Логируем для отладки
                         //log.Printf("Task: ChatID=%d, Message=%s", 
                             //task.ChatID, task.Message)
@@ -87,5 +87,6 @@ func main() {
                 }
             }
         }
+            
     log.Println("Bot stopped")
 }
