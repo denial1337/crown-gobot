@@ -6,7 +6,6 @@ import (
 	"context"
 	"time"
 	"errors"
-	"log"
 )
 
 const connString = "postgres://gouser:gopassword@localhost:5432/crown_gobot"
@@ -46,30 +45,23 @@ func (conn *DbConnection) InsertTask(values string, ctx context.Context) error {
 }
 
 func (conn *DbConnection) GetCurrentTasks(ctx context.Context, t time.Time) ([]models.TaskMessage, error) {
-	log.Print("we are in GetCurrentTasks")
 	if conn == nil {
 		return nil,  errors.New("Отсутствует подключение к базе данных")
 	}
-	
+
 	query := GetCurrentTasksQuery(t)
-	log.Print("we get query", query)
 	rows, err := conn.conn.Query(ctx, query)
-	log.Print("we get rows", rows != nil)
 	if err != nil {
 		return nil, err
 	}
-
 	var tasks []models.TaskMessage
-
 	for rows.Next() {
-		log.Print("we iter")
 		var task models.TaskMessage
 		if err := rows.Scan(&task.ChatID, &task.Message); err != nil {
 			return nil, errors.New("Ошибка при попытке чтения данных")
 		}
 		tasks = append(tasks, task)
 	}
-	log.Print("we return")
 	return tasks, nil
 }
 

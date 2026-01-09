@@ -10,7 +10,7 @@ import (
     "github.com/denial1337/crown-gobot/internal/bot"
     "github.com/denial1337/crown-gobot/internal/db"
     "github.com/denial1337/crown-gobot/internal/config"
-    //"github.com/denial1337/crown-gobot/internal/models"
+    "github.com/denial1337/crown-gobot/internal/models"
 )
 
 // ChatJoinRequest https://core.telegram.org/bots/api#chatjoinrequest
@@ -23,11 +23,9 @@ func main() {
         log.Fatal("TELEGRAM_TOKEN environment variable is required")
     }
 
-
     // Обработка сигналов для graceful shutdown
     ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
     defer cancel()
-
 
     conn, err := db.InitDb(ctx)
     if err != nil {
@@ -35,12 +33,13 @@ func main() {
     }
     defer conn.Close(ctx)
 
+    ms := models.NewMemoryStorage()
+
     // Создание бота
-    b, err := bot.New(cfg.TelegramToken, conn)
+    b, err := bot.New(cfg.TelegramToken, conn, ms)
     if err != nil {
         log.Fatalf("Failed to create bot: %v", err)
     }
-
 
     log.Println("Starting bot...")
     
