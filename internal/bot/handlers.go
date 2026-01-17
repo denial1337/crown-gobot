@@ -2,16 +2,20 @@ package bot
 
 import (
     "context"
-	"fmt"
+	//"fmt"
     "log"
     tgBot "github.com/go-telegram/bot"
-    "github.com/go-telegram/bot/models"
+    tgModels "github.com/go-telegram/bot/models"
+    "github.com/denial1337/crown-gobot/internal/models"
+   	"github.com/denial1337/crown-gobot/internal/consts"
+    "strings"
+    "strconv"
     // "os"
     // "bytes"
 )
 
 // Обработчик для тестовой команды
-func (b *Bot) testHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
+func (b *Bot) testHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     if update.Message == nil {
         return
     }
@@ -32,7 +36,7 @@ func (b *Bot) testHandler(ctx context.Context, bot *tgBot.Bot, update *models.Up
 }
 
 // Обработчик для команды /com с кнопками
-func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
+func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     if update.Message == nil {
         return
     }
@@ -40,7 +44,7 @@ func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *model
     chatID := update.Message.Chat.ID
     
     // Создаем inline-клавиатуру с двумя кнопками
-    keyboard := [][]models.InlineKeyboardButton{
+    keyboard := [][]tgModels.InlineKeyboardButton{
         {
 			{
                 Text:         "Hourly",
@@ -69,10 +73,10 @@ func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *model
     _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
         ChatID: chatID,
         Text:   "Выберите вариант:",
-        ReplyMarkup: &models.InlineKeyboardMarkup{
+        ReplyMarkup: &tgModels.InlineKeyboardMarkup{
             InlineKeyboard: keyboard,
         },
-        ParseMode: models.ParseModeMarkdown,
+        ParseMode: tgModels.ParseModeMarkdown,
     })
     
     if err != nil {
@@ -80,37 +84,16 @@ func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *model
     }
 }
 
-var ShortWeekdays = [7]string{
-	"Mon",
-	"Tue",
-	"Wed",
-	"Thu",
-	"Fri",
-	"Sat",
-	"Sun",
-}
 
-
-func (b *Bot) startHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-    keyboard := [][]models.InlineKeyboardButton{
-        {
-            {
-                Text: "Создать таску",
-                CallbackData: "create_task",
-            },
-            {
-                Text: "Удалить таску",
-                CallbackData: "delete_task",
-            },
-        },
-    }
+func (b *Bot) startHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+    keyboard := models.GetMainMenuState()
     //fileData, _ := os.ReadFile("./media/11.PNG")
     params := &tgBot.SendPhotoParams{
 		ChatID:  update.Message.Chat.ID,
-		//Photo:   &models.InputFileUpload{Filename: "media/11.PNG", Data: bytes.NewReader(fileData)},
-        Photo: &models.InputFileString{Data: b.photo},
+		//Photo:   &tgModels.InputFileUpload{Filename: "media/11.PNG", Data: bytes.NewReader(fileData)},
+        Photo: &tgModels.InputFileString{Data: b.photo},
 		Caption: "че делаем, пэпэ?",
-        ReplyMarkup: &models.InlineKeyboardMarkup{InlineKeyboard: keyboard},
+        ReplyMarkup: &tgModels.InlineKeyboardMarkup{InlineKeyboard: keyboard},
 	}
 
     // Отправляем фото с inline клавиатурой
@@ -120,8 +103,8 @@ func (b *Bot) startHandler(ctx context.Context, bot *tgBot.Bot, update *models.U
     }
 }
 
-func (b *Bot) createTaskHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-    keyboard := [][]models.InlineKeyboardButton{
+func (b *Bot) createTaskHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+    keyboard := [][]tgModels.InlineKeyboardButton{
         {
             {
                 Text: "1b",
@@ -136,7 +119,7 @@ func (b *Bot) createTaskHandler(ctx context.Context, bot *tgBot.Bot, update *mod
     _, err := bot.EditMessageReplyMarkup(ctx, &tgBot.EditMessageReplyMarkupParams{
         ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
         MessageID: update.CallbackQuery.Message.Message.ID,
-        ReplyMarkup: &models.InlineKeyboardMarkup{
+        ReplyMarkup: &tgModels.InlineKeyboardMarkup{
             InlineKeyboard: keyboard,
         },
     })
@@ -151,133 +134,8 @@ func (b *Bot) createTaskHandler(ctx context.Context, bot *tgBot.Bot, update *mod
     })
 }
 
-func (b *Bot) dailyCallbackHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-	log.Print("INSIDE dailyCallbackHandler")
-	log.Print(update.CallbackQuery.ID)
-    keyboard := [][]models.InlineKeyboardButton{}
-    chatID := update.CallbackQuery.Message.Message.Chat.ID
-	row := []models.InlineKeyboardButton{}
-    for _, day := range ShortWeekdays {
-        button := models.InlineKeyboardButton{
-            Text:         day,
-            CallbackData: fmt.Sprintf("schedule_weekday_%s", day),
-        }
-        row = append(row, button)
-    }
-	keyboard = append(keyboard, row)
 
-   	bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-    _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
-        ChatID: chatID,
-        Text:   "Выберите день недели:",
-        ReplyMarkup: &models.InlineKeyboardMarkup{
-            InlineKeyboard: keyboard,
-        },
-    })
-    
-    if err != nil {
-        log.Printf("Ошибка отправки сообщения: %v\n", err)
-    }
-}
-
-
-func (b *Bot) weeklyCallbackHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-	log.Print("INSIDE weeklyCallbackHandler")
-	log.Print(update.CallbackQuery.ID)
-    keyboard := [][]models.InlineKeyboardButton{}
-    chatID := update.CallbackQuery.Message.Message.Chat.ID
-	row := []models.InlineKeyboardButton{}
-    for _, day := range ShortWeekdays {
-        button := models.InlineKeyboardButton{
-            Text:         day,
-            CallbackData: fmt.Sprintf("schedule_weekday_%s", day),
-        }
-        row = append(row, button)
-    }
-	keyboard = append(keyboard, row)
-
-   	bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-    _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
-        ChatID: chatID,
-        Text:   "Выберите день недели:",
-        ReplyMarkup: &models.InlineKeyboardMarkup{
-            InlineKeyboard: keyboard,
-        },
-    })
-    
-    if err != nil {
-        log.Printf("Ошибка отправки сообщения: %v\n", err)
-    }
-}
-
-func (b *Bot) monthlyCallbackHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-	log.Print("INSIDE monthlyHandler")
-	log.Print(update.CallbackQuery.ID)
-    keyboard := [][]models.InlineKeyboardButton{}
-    chatID := update.CallbackQuery.Message.Message.Chat.ID
-
-    var row []models.InlineKeyboardButton
-    for i := 1; i <= 31; i++ {
-        button := models.InlineKeyboardButton{
-            Text:         fmt.Sprintf("%d", i),
-            CallbackData: fmt.Sprintf("schedule_day_%d", i),
-        }
-        row = append(row, button)
-        
-        if i % 7 == 0 || i == 31 {
-            keyboard = append(keyboard, row)
-            row = []models.InlineKeyboardButton{}
-        }
-    }
-   	bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-    _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
-        ChatID: chatID,
-        Text:   "Выберите день месяца:",
-        ReplyMarkup: &models.InlineKeyboardMarkup{
-            InlineKeyboard: keyboard,
-        },
-    })
-    
-    if err != nil {
-        log.Printf("Ошибка отправки сообщения: %v\n", err)
-    }
-}
-
-func (b *Bot) scheduleCallbackHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
-    if update.CallbackQuery == nil {
-        return
-    }
-	log.Print("INSIDE scheduleCallbackHandler")
-	log.Print(update.CallbackQuery.ID)
-    callbackData := update.CallbackQuery.Data
-	
-	chatID := update.CallbackQuery.Message.Message.Chat.ID
-    log.Println(callbackData, chatID)
-	
-
-    switch callbackData {
-    case "schedule_monthly":
-        log.Println("MONTHLY")
-		b.monthlyCallbackHandler(ctx, bot, update)
-	case "schedule_weekly":
-		log.Println("WEEKLY")
-		b.weeklyCallbackHandler(ctx, bot, update)
-    // Добавьте другие case для обработки других callback'ов
-    }
-    
-    // Ответим на callback, чтобы убрать "часики" у кнопки
-    bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-}
-
-func (b *Bot) callbackHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
+func (b *Bot) callbackHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     if update.CallbackQuery == nil {
         return
     }
@@ -291,13 +149,13 @@ func (b *Bot) callbackHandler(ctx context.Context, bot *tgBot.Bot, update *model
     })
 }
 
-func (b *Bot) askWithForceReply(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
+func (b *Bot) askWithForceReply(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     chatID := update.Message.Chat.ID
     
     _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
         ChatID: chatID,
         Text:   "Введите ваше имя:",
-        ReplyMarkup: &models.ForceReply{
+        ReplyMarkup: &tgModels.ForceReply{
             ForceReply: true,
             InputFieldPlaceholder: "Имя пользователя",
             Selective: true, // Только для этого пользователя
@@ -309,7 +167,7 @@ func (b *Bot) askWithForceReply(ctx context.Context, bot *tgBot.Bot, update *mod
     }
 }
 
-func (b *Bot) messageHandler(ctx context.Context, bot *tgBot.Bot, update *models.Update) {
+func (b *Bot) messageHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     if update.Message == nil {
         return
     }
@@ -328,3 +186,79 @@ func (b *Bot) messageHandler(ctx context.Context, bot *tgBot.Bot, update *models
     }
 }
 
+func (b *Bot) callBackHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+    var keyboard [][]tgModels.InlineKeyboardButton
+    text := update.CallbackQuery.Message.Message.Caption
+    
+    callback := update.CallbackQuery.Data
+    
+    switch true {
+    case callback == "create_task":
+        keyboard = models.WithSpecialButtons("", models.GetMinutesKeyboard(consts.TIMEFRAME_MINUTES))
+        text = callback + "\nМинуты"
+    case strings.Contains(callback, consts.TIMEFRAME_MINUTES):
+        keyboard = models.WithSpecialButtons(callback, models.GetHoursKeyboard(callback))
+        text = callback + "\nЧасы"
+    case lastPart == consts.DELETE:
+        callback = deleteLastPart(callback)
+        text = callback
+     case func() bool {
+        if _, err := strconv.Atoi(lastPart); err == nil { return true }
+        return false
+    }():
+        callback = callback + consts.VALUES_SEPARATOR
+        text = callback
+    case containsWeekday(lastPart):
+        callback = callback + consts.VALUES_SEPARATOR
+        text = callback
+    }
+    
+    log.Print("INSIDE dailyCallbackHandler")
+	log.Print(update.CallbackQuery.Data)
+    
+    _, err := bot.EditMessageCaption(ctx, &tgBot.EditMessageCaptionParams{
+        ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
+        MessageID:   update.CallbackQuery.Message.Message.ID,
+        Caption:     text,
+        ReplyMarkup: &tgModels.InlineKeyboardMarkup{
+            InlineKeyboard: keyboard,
+        },
+    })
+    if err != nil {
+        log.Printf("Error editing message: %v", err)
+    }    
+    
+    bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
+        CallbackQueryID: update.CallbackQuery.ID,
+    })
+}
+
+
+func lastPartHandle(callBackData string) string {
+    parts := strings.Split(callback, consts.VALUES_SEPARATOR)
+    var lastPart string
+    if len(parts) > 0 {
+        lastPart = parts[len(parts) - 1]
+    } else { return callBackData }
+
+    switch lastPart {
+    case consts.TIMEFRAME_SEPARATOR:
+        
+    }
+}
+
+func deleteLastPart(s string) string {
+    parts := strings.Split(s, consts.TIMEFRAME_SEPARATOR)
+    parts = parts[:len(parts) - 2]
+    
+    return strings.Join(parts, consts.TIMEFRAME_SEPARATOR)
+}
+
+func containsWeekday(s string) bool {
+    for _, day := range consts.ShortWeekdays {
+        if day == s {
+            return true
+        }
+    }
+    return false
+}

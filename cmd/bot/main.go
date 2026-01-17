@@ -15,12 +15,20 @@ import (
 
 // ChatJoinRequest https://core.telegram.org/bots/api#chatjoinrequest
 
+// todo:
+// question system
+// way to store answers
+// model of handle callbacks
+
+// как вариант добавить картинку с крестиком если в парте нашлось несколько спец символов
+
 func main() {
     // Загрузка конфигурации
     cfg := config.Load()
     
     if cfg.TelegramToken == "" {
         log.Fatal("TELEGRAM_TOKEN environment variable is required")
+        return
     }
 
     // Обработка сигналов для graceful shutdown
@@ -42,8 +50,6 @@ func main() {
     }
 
     log.Println("Starting bot...")
-    
-    // Запуск бота
     go b.Start(ctx)
     log.Println("bot started ...")
     for {
