@@ -43,7 +43,8 @@ func WithSpecialButtons(prev string, keyboard [][]tgModels.InlineKeyboardButton)
 	return keyboard
 }
 
-func GetMainMenuState() [][]tgModels.InlineKeyboardButton {
+func GetMainMenuState(prev string) [][]tgModels.InlineKeyboardButton {
+
 	keyboard := [][]tgModels.InlineKeyboardButton{
 		{
 			{
@@ -91,12 +92,16 @@ func GetMinutesKeyboard(prev string) [][]tgModels.InlineKeyboardButton {
 func GetHoursKeyboard(prev string) [][]tgModels.InlineKeyboardButton {
 	row := []tgModels.InlineKeyboardButton{}
     keyboard := [][]tgModels.InlineKeyboardButton{}
-    for i := range 23 {
+    for i := range 24 {
         button := tgModels.InlineKeyboardButton{
             Text:         strconv.Itoa(i),
             CallbackData: prev + strconv.Itoa(i) + consts.VALUES_SEPARATOR,
         }
         row = append(row, button)
+		if (i + 1) % 6 == 0 {
+			keyboard = append(keyboard, row)
+			row = []tgModels.InlineKeyboardButton{}
+		}
     }
 	keyboard = append(keyboard, row)
 
@@ -107,10 +112,10 @@ func GetHoursKeyboard(prev string) [][]tgModels.InlineKeyboardButton {
 func GetDOWKeyboard(prev string) [][]tgModels.InlineKeyboardButton {
 	keyboard := [][]tgModels.InlineKeyboardButton{}
 	row := []tgModels.InlineKeyboardButton{}
-    for _, dow := range consts.ShortWeekdays {
+    for i, dow := range consts.ShortWeekdays {
         button := tgModels.InlineKeyboardButton{
             Text:         dow,
-            CallbackData: prev + dow + consts.VALUES_SEPARATOR,
+            CallbackData: prev + strconv.Itoa(i + 1) + consts.VALUES_SEPARATOR,
         }
         row = append(row, button)
     }

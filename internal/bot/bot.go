@@ -44,8 +44,6 @@ func (b *Bot) Start(ctx context.Context) {
 
 func (b *Bot) registerHandlers() {
     b.tgBot.RegisterHandler(tgbotapi.HandlerTypeMessageText, "/test", tgbotapi.MatchTypePrefix, b.testHandler)
-    b.tgBot.RegisterHandler(tgbotapi.HandlerTypeMessageText, "/com", tgbotapi.MatchTypePrefix, b.scheduleHandler)
-    b.tgBot.RegisterHandler(tgbotapi.HandlerTypeCallbackQueryData, "com_option_", tgbotapi.MatchTypePrefix, b.callbackHandler)
     b.tgBot.RegisterHandler(tgbotapi.HandlerTypeMessageText, "/task", tgbotapi.MatchTypePrefix, taskHandler)
     b.tgBot.RegisterHandler(tgbotapi.HandlerTypeMessageText, "/start", tgbotapi.MatchTypePrefix, b.startHandler)
     b.tgBot.RegisterHandler(tgbotapi.HandlerTypeMessageText, "", tgbotapi.MatchTypePrefix, b.messageHandler)

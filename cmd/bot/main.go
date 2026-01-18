@@ -62,25 +62,25 @@ func main() {
                 return // Выход из функции main
                 
             default:
-                log.Println("In def...")
-                // Получаем задачи (это быстро, т.к. это просто срез)
-                tasks, err := conn.GetCurrentTasks(ctx, time.Now())
-                log.Println(len(tasks))
-                if err != nil {
-                    // Не используем Fatalf, чтобы не падать при ошибке
-                    // Просто логируем и продолжаем
-                    log.Printf("Failed while getting tasks: %v", err)
-                } else {
-                    // Обрабатываем задачи
-                    for _, task := range tasks {
-                        // Отправляем сообщение (раскомментируй когда нужно)
-                        //b.SendMessage(ctx, task.ChatID, task.Message)
-                        log.Print(task.ChatID)
-                        // Логируем для отладки
-                        //log.Printf("Task: ChatID=%d, Message=%s", 
-                            //task.ChatID, task.Message)
-                    }
-                }
+                // //log.Println("In def...")
+                // // Получаем задачи (это быстро, т.к. это просто срез)
+                // tasks, err := conn.GetCurrentTasks(ctx, time.Now())
+                // //log.Println(len(tasks))
+                // if err != nil {
+                //     // Не используем Fatalf, чтобы не падать при ошибке
+                //     // Просто логируем и продолжаем
+                //     //log.Printf("Failed while getting tasks: %v", err)
+                // } else {
+                //     // Обрабатываем задачи
+                //     for _, task := range tasks {
+                //         // Отправляем сообщение (раскомментируй когда нужно)
+                //         //b.SendMessage(ctx, task.ChatID, task.Message)
+                //         //log.Print(task.ChatID)
+                //         // Логируем для отладки
+                //         //log.Printf("Task: ChatID=%d, Message=%s", 
+                //             //task.ChatID, task.Message)
+                //     }
+                // }
                 
                 // Ждем 20 секунд ИЛИ сигнал завершения
                 select {

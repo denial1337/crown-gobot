@@ -9,7 +9,7 @@ import (
     "github.com/denial1337/crown-gobot/internal/models"
    	"github.com/denial1337/crown-gobot/internal/consts"
     "strings"
-    "strconv"
+    //"strconv"
     // "os"
     // "bytes"
 )
@@ -35,58 +35,9 @@ func (b *Bot) testHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.
     }
 }
 
-// Обработчик для команды /com с кнопками
-func (b *Bot) scheduleHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
-    if update.Message == nil {
-        return
-    }
-
-    chatID := update.Message.Chat.ID
-    
-    // Создаем inline-клавиатуру с двумя кнопками
-    keyboard := [][]tgModels.InlineKeyboardButton{
-        {
-			{
-                Text:         "Hourly",
-                CallbackData: "schedule_daily",
-            },
-            {
-                Text:         "Daily",
-                CallbackData: "schedule_daily",
-            },
-            {
-                Text:         "Weekly", 
-                CallbackData: "schedule_weekly",
-            },
-            {
-                Text:         "Monthly",
-                CallbackData: "schedule_monthly",
-            },
-            {
-                Text:         "Exact days", 
-                CallbackData: "schedule_exact_days",
-            },
-        },
-    }
-    
-    // Отправляем сообщение с кнопками
-    _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
-        ChatID: chatID,
-        Text:   "Выберите вариант:",
-        ReplyMarkup: &tgModels.InlineKeyboardMarkup{
-            InlineKeyboard: keyboard,
-        },
-        ParseMode: tgModels.ParseModeMarkdown,
-    })
-    
-    if err != nil {
-        log.Printf("Ошибка отправки сообщения: %v\n", err)
-    }
-}
-
 
 func (b *Bot) startHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
-    keyboard := models.GetMainMenuState()
+    keyboard := models.GetMainMenuState("")
     //fileData, _ := os.ReadFile("./media/11.PNG")
     params := &tgBot.SendPhotoParams{
 		ChatID:  update.Message.Chat.ID,
@@ -103,69 +54,38 @@ func (b *Bot) startHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels
     }
 }
 
-func (b *Bot) createTaskHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
-    keyboard := [][]tgModels.InlineKeyboardButton{
-        {
-            {
-                Text: "1b",
-                CallbackData: "bb1",
-            },
-            {
-                Text: "2b",
-                CallbackData: "bb2",
-            },
-        },
-    }
-    _, err := bot.EditMessageReplyMarkup(ctx, &tgBot.EditMessageReplyMarkupParams{
-        ChatID:    update.CallbackQuery.Message.Message.Chat.ID,
-        MessageID: update.CallbackQuery.Message.Message.ID,
-        ReplyMarkup: &tgModels.InlineKeyboardMarkup{
-            InlineKeyboard: keyboard,
-        },
-    })
+
+// func (b *Bot) callbackHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+//     if update.CallbackQuery == nil {
+//         return
+//     }
+
+//     callbackData := update.CallbackQuery.Data
+//     log.Println(callbackData)
+
+//     // Ответим на callback, чтобы убрать "часики" у кнопки
+//     bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
+//         CallbackQueryID: update.CallbackQuery.ID,
+//     })
+// }
+
+// func (b *Bot) askWithForceReply(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+//     chatID := update.Message.Chat.ID
     
-    if err != nil {
-        log.Printf("Ошибка изменения клавиатуры: %v", err)
-    }
+//     _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
+//         ChatID: chatID,
+//         Text:   "Введите ваше имя:",
+//         ReplyMarkup: &tgModels.ForceReply{
+//             ForceReply: true,
+//             InputFieldPlaceholder: "Имя пользователя",
+//             Selective: true, // Только для этого пользователя
+//         },
+//     })
     
-    // Обязательно отвечаем на callback query (убираем "часики")
-    bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-}
-
-
-func (b *Bot) callbackHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
-    if update.CallbackQuery == nil {
-        return
-    }
-
-    callbackData := update.CallbackQuery.Data
-    log.Println(callbackData)
-
-    // Ответим на callback, чтобы убрать "часики" у кнопки
-    bot.AnswerCallbackQuery(ctx, &tgBot.AnswerCallbackQueryParams{
-        CallbackQueryID: update.CallbackQuery.ID,
-    })
-}
-
-func (b *Bot) askWithForceReply(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
-    chatID := update.Message.Chat.ID
-    
-    _, err := bot.SendMessage(ctx, &tgBot.SendMessageParams{
-        ChatID: chatID,
-        Text:   "Введите ваше имя:",
-        ReplyMarkup: &tgModels.ForceReply{
-            ForceReply: true,
-            InputFieldPlaceholder: "Имя пользователя",
-            Selective: true, // Только для этого пользователя
-        },
-    })
-    
-    if err != nil {
-        log.Printf("Ошибка: %v", err)
-    }
-}
+//     if err != nil {
+//         log.Printf("Ошибка: %v", err)
+//     }
+// }
 
 func (b *Bot) messageHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
     if update.Message == nil {
@@ -187,39 +107,48 @@ func (b *Bot) messageHandler(ctx context.Context, bot *tgBot.Bot, update *tgMode
 }
 
 func (b *Bot) callBackHandler(ctx context.Context, bot *tgBot.Bot, update *tgModels.Update) {
+    var currentKeyboard func(string)[][]tgModels.InlineKeyboardButton
+    var nextKeyboard func(string)[][]tgModels.InlineKeyboardButton
     var keyboard [][]tgModels.InlineKeyboardButton
-    text := update.CallbackQuery.Message.Message.Caption
+    var nextTimeFrame string
+    //text := update.CallbackQuery.Message.Message.Caption
     
     callback := update.CallbackQuery.Data
     
     switch true {
     case callback == "create_task":
         keyboard = models.WithSpecialButtons("", models.GetMinutesKeyboard(consts.TIMEFRAME_MINUTES))
-        text = callback + "\nМинуты"
+    case strings.Contains(callback, consts.TIMEFRAME_DOW):
+        currentKeyboard = models.GetDOWKeyboard
+        nextKeyboard = models.GetMainMenuState
+    case strings.Contains(callback, consts.TIMEFRAME_MONTHES):
+        currentKeyboard = models.GetMonthKeyboard
+        nextKeyboard = models.GetDOWKeyboard
+        nextTimeFrame = consts.TIMEFRAME_DOW
+    case strings.Contains(callback, consts.TIMEFRAME_DOM):
+        currentKeyboard = models.GetDOMKeyboard
+        nextKeyboard = models.GetMonthKeyboard
+        nextTimeFrame = consts.TIMEFRAME_MONTHES
+    case strings.Contains(callback, consts.TIMEFRAME_HOURS):
+        currentKeyboard = models.GetHoursKeyboard
+        nextKeyboard = models.GetDOMKeyboard
+        nextTimeFrame = consts.TIMEFRAME_DOM
     case strings.Contains(callback, consts.TIMEFRAME_MINUTES):
-        keyboard = models.WithSpecialButtons(callback, models.GetHoursKeyboard(callback))
-        text = callback + "\nЧасы"
-    case lastPart == consts.DELETE:
-        callback = deleteLastPart(callback)
-        text = callback
-     case func() bool {
-        if _, err := strconv.Atoi(lastPart); err == nil { return true }
-        return false
-    }():
-        callback = callback + consts.VALUES_SEPARATOR
-        text = callback
-    case containsWeekday(lastPart):
-        callback = callback + consts.VALUES_SEPARATOR
-        text = callback
+        currentKeyboard = models.GetMinutesKeyboard
+        nextKeyboard = models.GetHoursKeyboard
+        nextTimeFrame = consts.TIMEFRAME_HOURS
     }
-    
+
+    if keyboard == nil {
+        keyboard = getNextKeyboard(&callback, nextTimeFrame, currentKeyboard, nextKeyboard)
+    }
     log.Print("INSIDE dailyCallbackHandler")
 	log.Print(update.CallbackQuery.Data)
     
     _, err := bot.EditMessageCaption(ctx, &tgBot.EditMessageCaptionParams{
         ChatID:      update.CallbackQuery.Message.Message.Chat.ID,
         MessageID:   update.CallbackQuery.Message.Message.ID,
-        Caption:     text,
+        Caption:     callback,
         ReplyMarkup: &tgModels.InlineKeyboardMarkup{
             InlineKeyboard: keyboard,
         },
@@ -234,31 +163,46 @@ func (b *Bot) callBackHandler(ctx context.Context, bot *tgBot.Bot, update *tgMod
 }
 
 
-func lastPartHandle(callBackData string) string {
-    parts := strings.Split(callback, consts.VALUES_SEPARATOR)
+func getNextKeyboard(callBackData *string, 
+    nextTimeFrame string,
+    currentKeyboard func(string)[][]tgModels.InlineKeyboardButton,
+    nextKeyboard func(string)[][]tgModels.InlineKeyboardButton,
+    ) [][]tgModels.InlineKeyboardButton {
+    parts := strings.Split(*callBackData, consts.VALUES_SEPARATOR)
+    for _, v := range parts {
+        log.Println(v)
+    }
     var lastPart string
-    if len(parts) > 0 {
-        lastPart = parts[len(parts) - 1]
-    } else { return callBackData }
-
+    if len(parts) > 1 {
+        lastPart = parts[len(parts) - 2]
+    } else { return models.WithSpecialButtons(*callBackData, currentKeyboard(*callBackData))}
     switch lastPart {
     case consts.TIMEFRAME_SEPARATOR:
-        
+        if nextTimeFrame != "" {
+            *callBackData = *callBackData + nextTimeFrame
+        }
+        return models.WithSpecialButtons(*callBackData, nextKeyboard(*callBackData))
+    case consts.DELETE:
+        *callBackData = deleteLastPart(*callBackData)
+        return models.WithSpecialButtons(*callBackData, currentKeyboard(*callBackData))
+    default:
+        return models.WithSpecialButtons(*callBackData, currentKeyboard(*callBackData))
     }
+    
 }
 
 func deleteLastPart(s string) string {
-    parts := strings.Split(s, consts.TIMEFRAME_SEPARATOR)
-    parts = parts[:len(parts) - 2]
+    parts := strings.Split(s, consts.VALUES_SEPARATOR)
+    parts = parts[:len(parts) - 3]
     
-    return strings.Join(parts, consts.TIMEFRAME_SEPARATOR)
+    return strings.Join(parts, consts.VALUES_SEPARATOR) + "|"
 }
 
-func containsWeekday(s string) bool {
-    for _, day := range consts.ShortWeekdays {
-        if day == s {
-            return true
-        }
-    }
-    return false
-}
+// func containsWeekday(s string) bool {
+//     for _, day := range consts.ShortWeekdays {
+//         if day == s {
+//             return true
+//         } 
+//     }
+//     return false
+// }
